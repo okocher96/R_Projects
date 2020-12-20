@@ -1,0 +1,176 @@
+---
+title: "Individual project"
+author: "Oleksii Kocheriev"
+date: "24/11/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Introduction 
+
+After the collapse of Soviet Union in 1991 up until now the world experienced a lot of geographical changes (ex. appearance of 15 new countries on the former USSR territories) and military conflicts. Iraq War (2001- 2013), Afghanistan War (1992 - 1996), War in Donbass, Ukraine (2014 - now), you name it. Fortunately, they were not as massive and destructive as WW2 (1939 - 1945) or Vietnam War (1955 - 1975); however, this shows that military conflicts is still a thing in Modern World History. And no war starts without money: countries still spend significant amount of money on national defense, development of new armored vehicles, military aircraft and much more. Inspired by material learned in this course and some recent historical events, this report will focus on how much some countries (and block of countries known as G8 as well) spent on military expenses as a percentage of their GDP. Military expenditures of G8, Ukraine, United States and overall world will be considered and analyzed below. It will be seen that there is a strong dependence of change in military expenditures as % of GDP during peaceful times and military turmoils. The code used to analyze data was inspired by this course while all the historical links will be referenced from reliable resources.
+
+Brief description of the code
+
+The dataset was taken from the World Bank website (1).The chunk of code below pre-processes data and makes it available for  drawing graphs and performing some introductory statistical analysis of given data.
+Firstly, it is seen that some of the columns' names are separate words and years are not integers, which is immediately fixed. The next step is to assign 0 to NA values (these NA occur since countries either didn't exist or were parts of other ones that years) and after that to round all numbers to three decimal points (2). Having performed these operations, we can now start our pre-processing and analysis of particular countries, groups and the world overall. It is similar for most groups, except we choose different columns and time periods depending on a subject of subset. The brief code logic is described in comments inside the chunks. To make the report more diverse, different types of graphs is used and visualization is done via both R basic plots and ggplot2 library (3). Moreover, the analysis of the last country in the list (Ukraine) also includes simple statistical analysis involving regression.
+                                                          
+```{r}
+my_data <- read.csv("exportecon.csv")
+#dataset clearing port
+
+#modifying columns
+colnames(my_data)[1:4] <- c("Country_Name", "Country_Code", "Indicator_Name", "Indicator_Code")
+
+#modifying years
+colnames(my_data)[5:65] <- 1959 + seq(1960:2020)
+
+#dealing with na
+my_data[is.na(my_data)] <- 0
+#rounding
+library('scales')  
+my_data[5:65] <- round(my_data[5:65], 3)
+```
+
+Project Description & Analysis
+
+Overall World 
+
+From the graph it is seen that world average military expenditure as % of GDP fluctuated a lot throughout 1992-2019 time period. It was decreasing from 1992 to 2000, with an increase from 2.2% to 2.6% from 2000 to 2009. The explanation for this is that United States spent the most on military expenditures while being the biggest economy in the world. Hence, United States actions highly influenced the overall world statistics. In 1992 - 1999, there were no major conflicts with United States taken part in it (4). However, terrorist attacks on September 11,2001 led to a major and rapid increase in United States military expenditures, caused by start of War on Terror (5). Besides United States, Russia, Britain, France as well as NATO were involved in this conflict, hence increasing military expenses of the world overall. After that, in 2011- 2019 there were still several major wars (such as Syrian Civil War), but after the end of Iraq War and withdrawal of United States troops in 2011 (6), United States began a sharp decrease in military expenditures as % of GDP (which we will see in later analysis). Other countries followed United States practice, which led to a minimum military expenditure as % of World GDP (2.17%) in 2018. 
+
+The second graph shows that the distribution of military expenditures as a % of World GDP throughout this time was left-skewed with average of 2.35%.
+```{r}
+library(tidyverse) 
+
+#subsetting overall world data
+world1<- subset(my_data, Country_Name %in% "World")
+
+#selecting columns for 1992-2019 period; deleting columns with country code and indicator names and merging 
+#the data into a vector g_77 and assign column names World and Years for readability
+g_83 <-world1 %>% select(1:3, 37:64)
+g_77<- g_83[-c(2:4)]
+v12<- as.integer(names(g_77[2:28]))
+g_76 <- select(g_77, -1)
+g_77 <- rbind(g_76, v12)
+rownames(g_77) <- c("World", "Years")
+
+#transposing data and saving it as a data frame
+g_neww <- as.data.frame(t(g_77))
+
+#graphing the world military expenditures tendency 
+ggplot(g_neww, aes(x = Years, y = World)) + geom_line() + labs(title = "World Military Expenditures, % of GDP", x = "Years", y = "Percentage, %") 
+
+#Density histogram
+d <-density(g_neww$World)
+plot(d, main = "World Military Expenditures, % of GDP", xlab = "Percentage, %", ylab = "Frequency of occurance betwwen 1992-2019")
+```
+                                                      
+United States
+
+The most important thing the United States analysis shows is how strongly expenditures on military, % of GDP of the US and World respectively are correlated. Same tendency with peaks and lows at mostly same times, showing the significance of the role played by United States in the military expenditures and expectations of the world. Some kind of stabilization of decrease and slight increase in the period from 2015-2019 might be addressed by Trade War with China (7) that led to an increased military tension between the two countries.
+
+Second graph provides a histogram of military expenditures as a % of United States GDP throughout this time. It follows some kind of bimodal distribution with two peaks around 3.5% and 4.2% with average of 3.85%.
+```{r}
+#subsetting US data
+usa<- subset(my_data, Country_Name %in% "United States")
+
+#selecting columns for 1992-2019 period; deleting columns with country code and indicator names and merging 
+#the data into a vector g_77 and assign column names United_States and Years for readability
+g_83 <-usa %>% select(1:3, 37:64)
+g_77<- g_83[-c(2:4)]
+v12<- as.integer(names(g_77[2:28]))
+g_76 <- select(g_77, -1)
+g_77 <- rbind(g_76, v12)
+rownames(g_77) <- c("United_States", "Years")
+#transposing data and saving it as a data frame
+g_neww <- as.data.frame(t(g_77))
+
+#graphing US military expenditures tendency
+ggplot(g_neww, aes(x = Years, y = United_States)) + geom_line() + labs(title = "United States Military Expenditures, % of GDP", x = "Years", y = "Percentage, %") 
+
+#Density histogram
+d <-hist(g_neww$United_States, main = "United States Military Expenditures, % of GDP", xlab = "Percentage, %", ylab = "Frequency of occurance betwwen 1992-2019", breaks = 12, col = "violet")
+```  
+
+```{r, results='asis', echo=FALSE}
+cat("\\newpage")
+```
+
+Group of Eight (G8)
+
+Here, we will take a look at G8, which was an inter-governmental political forum from 1997 until 2014. It had formed from incorporating the country of Russia into the Group of Seven, or G7, and returned to its previous name after Russia was disinvited in 2014 (8). Collectively, in 2012 the G8 nations comprised 50.1 percent of 2012 global nominal GDP and 40.9 percent of global GDP (PPP), and hence this group of countries is particularly interesting to military expenditures analysis. 
+
+Firstly, it is worth noticing that United States and Russia spent the biggest proportions of their GDP on military expenditures throughout this period of time. Other 6 members of G8 had a relatively flat graphs with slight decrease in expenditures from 1997 to 2014, with Canada spending the least % of GDP on military expenditures and being the only country whose expenditure has fallen below 1% (0.992% in 2014) during this time period. Finally, it is interesting to point out that United States and Russian expenditures were moving in the same direction until 2011, where United States figure continued steep decrease and Russian one contrary started to increase. The sharp increase in Russian military expenditures in 2008-2009 can be explained by Russo-Georgian War in 2008 (9), whereas increase in 2011-2014 probably was a preparation for Russian Intervention in Ukraine in 2014 (10), which eventually led to suspension of Russia in G8 and renaming of the group of countries back to G7.
+```{r}
+g_8 <- subset(my_data, Country_Name %in% c("United States", "France", "Canada", "Russian Federation", "Germany", "Italy", "United Kingdom", "European Union"))
+#choosing period of time as 1992 - 2014 
+g_88 <- g_8 %>% select(1:3, 42:59)
+yrs <- 1996 + seq(1997:2014)
+g_88 <- g_88[-c(2:3)]
+v1<- as.integer(names(g_88[2:19]))
+g_88 <- select(g_88, -1)
+g_89 <- rbind(g_88, v1)
+rownames(g_89) <- c("Canada", "Germany", "European_Union", "France", "United_Kingdom", "Italy", "Russian_Federation", "United_States", "Years")
+#transposing data
+g_new <- as.data.frame(t(g_89))
+
+ggplot(g_new, aes(x = Years))+ geom_line(aes(y = Canada, col = "Canada")) + geom_line(aes(y = Germany, col = "Germany")) + geom_line(aes(y = European_Union, col = "European Union")) +geom_line(aes(y = France, col = "France"))+ geom_line(aes(y = United_Kingdom, col = "United Kingdom")) + geom_line(aes(y = Italy, col = "Italy")) + geom_line(aes(y = Russian_Federation, col = "Russian Federation")) + geom_line(aes(y = United_States, col = "United States"))+ labs(title = "G8 Military Expenditures, % of GDP", x = "Years", y = "Percentage, %")
+```
+Ukraine
+
+Lastly, this report will briefly talk about Ukrainian military expenditures. From 1992 to 2014, it was mostly decreasing (except some peak in late 1990s), but starting 2014 there is an instant sharp increase, mostly doubling the military expenditure as a % of GDP. This can be explained by Russo-Ukrainian War started in 2014. Even though the conflict nowadays became more of a frozen one (since approximately 2016), there are no active signs of advanced negotiations for settling it down. As a result, Ukraine still needs to keep up the military expenditures to defend its territory in case of further military actions, which in turn explains high graph figures after 2016.
+
+Finally, this report uses two types of regression to try to forecast further Ukrainian military expenditures: linear regression and polynomial regression with a power of 3 (11). Based on two graphs below, linear regression is a better fit, since it predicts the % to be a bit above 2.5% (in other words, a tiny fall from nowadays % expenditure of GDP). It is a reasonable prediction, since there are no signs of possible aggravation of the conflict any time soon. Polynomial regression will predict even bigger increase in military expenditure as a % of GDP (because it as an obvious overfit to the data), which is not likely to be true due to the reason in the previous sentence. 
+```{r}
+library("gridExtra")
+
+ukr<- subset(my_data, Country_Name %in% "Ukraine")
+g_84 <-ukr %>% select(1:3, 38:64)
+g_78<- g_84[-c(2:4)]
+v12<- as.integer(names(g_78[2:27]))
+g_71 <- select(g_78, -1)
+g_70 <- rbind(g_71, v12)
+rownames(g_70) <- c("Ukraine", "Years")
+
+#transposing data
+g_neww <- as.data.frame(t(g_70))
+#graph via basic r
+ggplot(g_neww, aes(x = Years, y = Ukraine)) + geom_line() + labs(title = "Ukraine Military Expenditures, % of GDP", x = "Years", y = "Percentage, %") 
+
+lm1 <- ggplot(g_neww, aes(x = Years, y = Ukraine)) + geom_point() + geom_smooth(method = "lm", formula = y ~ x)   +labs(title = "Ukraine Military Expenditures, % of GDP", x = "Years", y = "Percentage, %", subtitle = "Linear regression model") 
+
+pm1 <- ggplot(g_neww, aes(x = Years, y = Ukraine)) + geom_point() + geom_smooth(method = "lm", formula = y ~ poly(x, 3))   +labs(title = "Ukraine Military Expenditures, % of GDP", x = "Years", y = "Percentage, %", subtitle = "Regression model with polynomial of power 3") 
+
+grid.arrange(lm1, pm1, nrow = 2, ncol = 1) #( Reference #12)
+
+```
+Conclusion
+
+This report covered the military expenditure as a % of GDP of overall world, United States, G8 and Ukraine. It was seen that overall World and United States % of expenditures are strongly correlated, the War of Terror was the biggest conflict throughout 1992-2019 time frame, Russia increased military expenditures contrary to all other members of G8 from 2011 to 2014 and that Russo-Ukrainian War (2014 - ongoing) had a great impact not only on Ukrainian military expenditures, but on Russian membership in G8 as well. Various techniques used to pre-process and analyze this data were inspired by this course, both R basic plots and ggplot library were used and some basic statistical analysis (linear and polynomial regressions) was applied in the end of  the report.
+
+
+```{r, results='asis', echo=FALSE}
+cat("\\newpage")
+```
+
+
+List of references
+
+
+1. https://data.worldbank.org/indicator/MS.MIL.XPND.GD.ZS?name_desc=false
+2. https://www.rdocumentation.org/packages/scales/versions/0.4.1
+3. https://ggplot2.tidyverse.org
+4. https://en.wikipedia.org/wiki/List_of_wars:_1990–2002
+5. https://en.wikipedia.org/wiki/War_on_terror
+6. https://en.wikipedia.org/wiki/Iraq_War#2011:_U.S._withdrawal
+7. https://en.wikipedia.org/wiki/China–United_States_trade_war
+8. https://en.wikipedia.org/wiki/Group_of_Eight
+9. https://en.wikipedia.org/wiki/Russo-Georgian_War
+10.https://en.wikipedia.org/wiki/Russo-Ukrainian_War
+11.https://stats.idre.ucla.edu/r/faq/how-can-i-explore-different-smooths-in-ggplot2/
+12.https://cran.r-project.org/web/packages/gridExtra/vignettes/arrangeGrob.html
+
+
